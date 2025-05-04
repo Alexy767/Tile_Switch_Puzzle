@@ -4,6 +4,9 @@ let columns = 5;
 
 let gameOver = false;
 
+let time = 0;
+let timeCounter;
+
 let confirmCheck = false;
 
 window.onload = function() {
@@ -42,6 +45,8 @@ window.onload = function() {
 function reloadGame() {
     clearBoard();
     gameOver = false;
+    clearInterval(timeCounter);
+    timeCounter = null;
     startGame();
 }
 
@@ -83,6 +88,12 @@ function startGame() {
     columns = parseInt(localStorage.getItem("TileSwapPuzzleBoardDimension") ? localStorage.getItem("TileSwapPuzzleBoardDimension").split("x")[1] : 5);
     document.getElementById("board-dimension").innerText = rows + "x" + columns;
     document.getElementById("set-board-dimension").innerText = rows + "x" + columns || "5x5";
+    
+    moves = 0;
+    document.getElementById("moves-count").innerText = moves;
+
+    time = 0;
+    document.getElementById("time-count").innerText = "00:00";
 
     document.getElementById("solved-text").setAttribute("hidden", "");
 
@@ -105,6 +116,39 @@ function startGame() {
     }
 
     console.log(board);
+
+    let startTime = new Date().getTime();
+    timeCounter = setInterval(function() {
+        let now = new Date().getTime();
+        let timeElapsed = now - startTime;
+        let minutes = Math.floor((timeElapsed % (1000 * 60 * 60)) / (1000 * 60));
+        let seconds = Math.floor((timeElapsed % (1000 * 60)) / 1000);
+        let secondsInTotal = Math.floor(timeElapsed / 1000);
+        let processedTime;
+        time = secondsInTotal;
+        if (minutes > 0) {
+            if (minutes >= 10) {
+                if (seconds >= 10) {
+                    processedTime = minutes + ":" + seconds
+                } else {
+                    processedTime = minutes + ":" + "0" + seconds;
+                }
+            } else {
+                if (seconds >= 10) {
+                    processedTime = "0" + minutes + ":" + seconds
+                } else {
+                    processedTime = "0" + minutes + ":" + "0" + seconds;
+                }
+            }
+        } else {
+            if (seconds >= 10) {
+                processedTime = "00" + ":" + seconds
+            } else {
+                processedTime = "00" + ":" + "0" + seconds;
+            }
+        }
+        document.getElementById("time-count").innerText = processedTime;
+    }, 1000);
 }
 
 function clearBoard() {
@@ -125,6 +169,9 @@ function clickTile() {
     let coords = tile.id.split("-"); // "0-0" -> ["0", "0"]
     let r = parseInt(coords[0]);
     let c = parseInt(coords[1]);
+
+    moves++;
+    document.getElementById("moves-count").innerText = moves;
     
     toggleTile(r, c);
    
@@ -146,6 +193,8 @@ function clickTile() {
     }
     if (tilesAtState1 == rows * columns) {
         gameOver = true;
+        clearInterval(timeCounter);
+        timeCounter = null;
         document.getElementById("solved-text").removeAttribute("hidden");
         alert("You win!");
     }
